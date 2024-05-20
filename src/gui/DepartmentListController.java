@@ -43,7 +43,8 @@ public class DepartmentListController implements Initializable {
 	private ObservableList<Department> obsList;
 	
 	public void onButtonNewAction(ActionEvent event) {
-		createDialogForm("/gui/DepartmentForm.fxml", Utils.currentStage(event));
+		Department obj = new Department();
+		createDialogForm(obj,"/gui/DepartmentForm.fxml", Utils.currentStage(event));
 	}
 	
 	private void initializeNodes() {
@@ -70,11 +71,16 @@ public class DepartmentListController implements Initializable {
 		initializeNodes();
 		
 	}
-	private void createDialogForm(String absoluteName,Stage parent) {
+	private void createDialogForm(Department obj,String absoluteName,Stage parent) {
 		try {
 			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName ));
 			Pane pane = loader.load();
 			Stage dialog = new Stage();
+			
+			DepartmentFormController controller = loader.getController();
+			controller.setDep(obj);
+			controller.updateFormData();
+			
 			dialog.setTitle("Enter Department Data");
 			dialog.setScene(new Scene(pane));
 			dialog.setResizable(false);
