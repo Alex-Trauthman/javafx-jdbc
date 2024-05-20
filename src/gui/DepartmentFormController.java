@@ -3,7 +3,9 @@ package gui;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import db.DbException;
 import gui.listeners.DataChangeListener;
@@ -18,6 +20,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import model.entities.Department;
+import model.exceptions.ValidationException;
 import model.services.DepartmentService;
 
 public class DepartmentFormController implements Initializable {
@@ -58,11 +61,12 @@ public class DepartmentFormController implements Initializable {
 			service.saveOrUpdate(dep);
 			notifyDataChangeListeners();
 			Utils.currentStage(event).close();
-		} catch (DbException e) {
+		}catch(ValidationException e) {
+			setErrorMessages(e.getErrors());
+		}
+		catch (DbException e) {
 			Alerts.showAlert("Error Saving Department", "Database exception", e.getMessage(), AlertType.ERROR);
-		} catch (IllegalStateException e) {
-            Alerts.showAlert("Error Saving Department", "Illegal State Exception", e.getMessage(), AlertType.ERROR);
-        }
+		}
 	}
 
 	private void notifyDataChangeListeners() {
@@ -107,16 +111,25 @@ public class DepartmentFormController implements Initializable {
 
 	public Department getFormData() {
 		Department obj = new Department();
+		ValidationException error = new ValidationException("Error validating data");
 		obj.setId(Utils.tryParseToInt(txtId.getText()));
+		if(txtName.getText() == null|| txtName.getText().isBlank()) {
+			error.addError("name", "Data must be informed");
+		}
 		obj.setName(txtName.getText());
-		if(obj.getName() == null|| obj.getName().isBlank()) {
-			
-			return null;
+		if(error.getErrors().size()>0) {
+			throw error;
 		}
 		return obj;
 	}
 	
 	public void subscribeDataChangeListener(DataChangeListener listener) {
 		listeners.add(listener);
+	}
+	private void setErrorMessages(Map<String,String> errors) {
+		Set <String> fields = errors.keySet();
+		if(fields.contains("name")) {
+			error.setText(errors.get("name"));
+		}
 	}
 }
