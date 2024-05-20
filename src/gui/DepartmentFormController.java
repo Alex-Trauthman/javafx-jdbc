@@ -41,7 +41,7 @@ public class DepartmentFormController implements Initializable {
 	@FXML
 	public void onSaveBtAction(ActionEvent event) {
 		try {
-			dep = getFormData();
+			dep = getFormData(event);
 			if (dep == null) {
 				throw new IllegalStateException(
 						"Dep instance is null (Check DepartmentFormController or ListController)");
@@ -51,7 +51,7 @@ public class DepartmentFormController implements Initializable {
 						"Service instance is null (Check DepartmentFormController or ListController)");
 			}
 			service.saveOrUpdate(dep);
-			Utils.currentStage(event);
+			Utils.currentStage(event).close();
 		} catch (DbException e) {
 			Alerts.showAlert("Error Saving Department", "Database exception", e.getMessage(), AlertType.ERROR);
 		} catch (IllegalStateException e) {
@@ -60,8 +60,9 @@ public class DepartmentFormController implements Initializable {
 	}
 
 	@FXML
-	public void onCancelBtAction() {
+	public void onCancelBtAction(ActionEvent event) {
 		System.out.println("Cancel Test");
+		Utils.currentStage(event).close();
 	}
 
 	@Override
@@ -91,12 +92,13 @@ public class DepartmentFormController implements Initializable {
 		service = aux;
 	}
 
-	public Department getFormData() {
+	public Department getFormData(ActionEvent event) {
 		Department obj = new Department();
 		obj.setId(Utils.tryParseToInt(txtId.getText()));
 		obj.setName(txtName.getText());
 		if(obj.getName() == null|| obj.getName() == " ") {
 			
+			Utils.currentStage(event).close();
 			return null;
 		}
 		return obj;
