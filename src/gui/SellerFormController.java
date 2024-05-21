@@ -1,9 +1,11 @@
 package gui;
 
 import java.net.URL;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -36,7 +38,7 @@ import model.services.DepartmentService;
 import model.services.SellerService;
 
 public class SellerFormController implements Initializable {
-	
+
 	private DepartmentService depService;
 
 	private List<DataChangeListener> listeners = new ArrayList<DataChangeListener>();
@@ -62,7 +64,7 @@ public class SellerFormController implements Initializable {
 
 	@FXML
 	private ComboBox<Department> cBDepartment;
-	
+
 	@FXML
 	private Label errorName;
 	@FXML
@@ -77,9 +79,9 @@ public class SellerFormController implements Initializable {
 
 	@FXML
 	private Button cancelBt;
-	
+
 	private ObservableList<Department> obs;
-	
+
 	@FXML
 	public void onSaveBtAction(ActionEvent event) {
 		try {
@@ -138,12 +140,12 @@ public class SellerFormController implements Initializable {
 		txtEmail.setText(sell.getEmail());
 		Locale.setDefault(Locale.US);
 		txtSalary.setText(String.format("%.2f", sell.getBaseSalary()));
-		if(sell.getBirthDate() != null) {
+		if (sell.getBirthDate() != null) {
 			dPBirthDate.setValue(LocalDate.ofInstant(sell.getBirthDate().toInstant(), ZoneId.systemDefault()));
 		}
-		if(sell.getDepartment() == null) {
+		if (sell.getDepartment() == null) {
 			cBDepartment.getSelectionModel().selectFirst();
-		}else {
+		} else {
 			cBDepartment.setValue(sell.getDepartment());
 		}
 	}
@@ -165,9 +167,27 @@ public class SellerFormController implements Initializable {
 			error.addError("name", "Data must be informed");
 		}
 		obj.setName(txtName.getText());
+		if (txtEmail.getText() == null || txtEmail.getText().isBlank()) {
+			error.addError("email", "Data must be informed");
+		}
+		obj.setEmail(txtEmail.getText());
+		if (dPBirthDate.getValue() == null) {
+			error.addError("Birth Date", "Data must be informed");
+		}else {
+			Instant instantBirth = Instant.from(dPBirthDate.getValue().atStartOfDay(ZoneId.systemDefault()));
+			obj.setBirthDate(Date.from(instantBirth));
+		}
+		if (txtSalary.getText() == null || txtSalary.getText().isBlank()) {
+			error.addError("Salary", "Data must be informed");
+		}
+		obj.setBaseSalary(Utils.tryParseToDouble(txtSalary.getText()));
+		
+		obj.setDepartment(cBDepartment.getValue());
+		
 		if (error.getErrors().size() > 0) {
 			throw error;
 		}
+
 		return obj;
 	}
 
@@ -179,26 +199,46 @@ public class SellerFormController implements Initializable {
 		Set<String> fields = errors.keySet();
 		if (fields.contains("name")) {
 			errorName.setText(errors.get("name"));
+		}else {
+			errorName.setText(" ");
 		}
+		if (fields.contains("email")) {
+			errorEmail.setText(errors.get("email"));
+		}else {
+			errorEmail.setText(" ");
+		}
+		if (fields.contains("Birth Date")) {
+			errorBirthDate.setText(errors.get("Birth Date"));
+		}else {
+			errorBirthDate.setText(" ");
+		}
+		if (fields.contains("Salary")) {
+			errorSalary.setText(errors.get("Salary"));
+		}else {
+			errorSalary.setText(" ");
+		}
+	
 	}
+
 	public void loadAssociatedObjects() {
-		if(depService == null) {
+		if (depService == null) {
 			throw new IllegalStateException("Department service is null");
 		}
 		List<Department> dep = depService.findAll();
 		obs = FXCollections.observableArrayList(dep);
 		cBDepartment.setItems(obs);
 	}
+
 	private void initializeComboBoxDepartment() {
-		 Callback<ListView<Department>, ListCell<Department>> factory = lv -> new ListCell<Department>() {
-		 @Override
-		 protected void updateItem(Department item, boolean empty) {
-		 super.updateItem(item, empty);
-		 setText(empty ? "" : item.getName());
-		 }
-		 };
+		Callback<ListView<Department>, ListCell<Department>> factory = lv -> new ListCell<Department>() {
+			@Override
+			protected void updateItem(Department item, boolean empty) {
+				super.updateItem(item, empty);
+				setText(empty ? "" : item.getName());
+			}
+		};
 		cBDepartment.setCellFactory(factory);
 		cBDepartment.setButtonCell(factory.call(null));
-		} 
+	}
 
 }

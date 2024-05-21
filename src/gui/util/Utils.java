@@ -92,4 +92,12 @@ public class Utils {
 			}
 		});
 	}
+	public static Double tryParseToDouble(String string) {
+		try {
+
+			return Double.parseDouble(string);
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
 }
