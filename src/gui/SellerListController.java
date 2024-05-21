@@ -1,5 +1,6 @@
 package gui;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.List;
@@ -16,7 +17,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -24,6 +27,8 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.Pane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.entities.Seller;
 import model.services.SellerService;
@@ -55,28 +60,28 @@ public class SellerListController implements Initializable, DataChangeListener {
 	@FXML
 	private TableColumn<Seller, Seller> tableColumnREMOVE;
 
-//	private void initEditButtons() {
-//		tableColumnEDIT.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
-//		tableColumnEDIT.setCellFactory(param -> new TableCell<Seller, Seller>() {
-//			private final Button button = new Button("edit");
-//
-//			@Override
-//			protected void updateItem(Seller obj, boolean empty) {
-//				super.updateItem(obj, empty);
-//				if (obj == null) {
-//					setGraphic(null);
-//					return;
-//				}
-//				setGraphic(button);
-//				button.setOnAction(
-//						event -> createDialogForm(obj, "/gui/SellerForm.fxml", Utils.currentStage(event)));
-//			}
-//		});
-//	}
+	private void initEditButtons() {
+		tableColumnEDIT.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
+		tableColumnEDIT.setCellFactory(param -> new TableCell<Seller, Seller>() {
+			private final Button button = new Button("edit");
+
+			@Override
+			protected void updateItem(Seller obj, boolean empty) {
+				super.updateItem(obj, empty);
+				if (obj == null) {
+					setGraphic(null);
+					return;
+				}
+				setGraphic(button);
+				button.setOnAction(
+						event -> createDialogForm(obj, "/gui/SellerForm.fxml", Utils.currentStage(event)));
+			}
+		});
+	}
 
 	public void onButtonNewAction(ActionEvent event) {
 		Seller obj = new Seller();
-//		createDialogForm(obj, "/gui/SellerForm.fxml", Utils.currentStage(event));
+		createDialogForm(obj, "/gui/SellerForm.fxml", Utils.currentStage(event));
 	}
 
 	private void initializeNodes() {
@@ -103,7 +108,7 @@ public class SellerListController implements Initializable, DataChangeListener {
 		List<Seller> list = sellService.findAll();
 		obsList = FXCollections.observableArrayList(list);
 		tableViewSeller.setItems(obsList);
-//		initEditButtons();
+		initEditButtons();
 		initRemoveButtons();
 	}
 
@@ -148,28 +153,28 @@ public class SellerListController implements Initializable, DataChangeListener {
 
 	}
 
-//	private void createDialogForm(Seller obj, String absoluteName, Stage parent) {
-//		try {
-//			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
-//			Pane pane = loader.load();
-//			Stage dialog = new Stage();
-//
-//			SellerFormController controller = loader.getController();
-//			controller.setSell(obj);
-//			controller.updateFormData();
-//			controller.setSellerService(new SellerService());
-//			controller.subscribeDataChangeListener(this);
-//
-//			dialog.setTitle("Enter Seller Data");
-//			dialog.setScene(new Scene(pane));
-//			dialog.setResizable(false);
-//			dialog.initOwner(parent);
-//			dialog.initModality(Modality.WINDOW_MODAL);
-//			dialog.showAndWait();
-//		} catch (IOException e) {
-//			Alerts.showAlert("IOException", "Error loading form", e.getMessage(), AlertType.ERROR);
-//		}
-//	}
+	private void createDialogForm(Seller obj, String absoluteName, Stage parent) {
+		try {
+			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
+			Pane pane = loader.load();
+			Stage dialog = new Stage();
+
+			SellerFormController controller = loader.getController();
+			controller.setSell(obj);
+			controller.updateFormData();
+			controller.setSellerService(new SellerService());
+			controller.subscribeDataChangeListener(this);
+
+			dialog.setTitle("Enter Seller Data");
+			dialog.setScene(new Scene(pane));
+			dialog.setResizable(false);
+			dialog.initOwner(parent);
+			dialog.initModality(Modality.WINDOW_MODAL);
+			dialog.showAndWait();
+		} catch (IOException e) {
+			Alerts.showAlert("IOException", "Error loading form", e.getMessage(), AlertType.ERROR);
+		}
+	}
 
 	@Override
 	public void onDataChanged() {
