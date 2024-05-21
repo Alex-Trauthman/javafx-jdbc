@@ -1,8 +1,11 @@
 package gui;
 
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -17,6 +20,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import model.entities.Seller;
@@ -24,9 +28,9 @@ import model.exceptions.ValidationException;
 import model.services.SellerService;
 
 public class SellerFormController implements Initializable {
-	
+
 	private List<DataChangeListener> listeners = new ArrayList<DataChangeListener>();
-	
+
 	private SellerService service;
 
 	private Seller sell;
@@ -38,7 +42,22 @@ public class SellerFormController implements Initializable {
 	private TextField txtName;
 
 	@FXML
-	private Label error;
+	private TextField txtEmail;
+
+	@FXML
+	private DatePicker dPBirthDate;
+
+	@FXML
+	private TextField txtSalary;
+
+	@FXML
+	private Label errorName;
+	@FXML
+	private Label errorEmail;
+	@FXML
+	private Label errorBirthDate;
+	@FXML
+	private Label errorSalary;
 
 	@FXML
 	private Button saveBt;
@@ -51,8 +70,7 @@ public class SellerFormController implements Initializable {
 		try {
 			sell = getFormData();
 			if (sell == null) {
-				throw new IllegalStateException(
-						"Sell instance is null (Check SellerFormController or ListController)");
+				throw new IllegalStateException("Sell instance is null (Check SellerFormController or ListController)");
 			}
 			if (service == null) {
 				throw new IllegalStateException(
@@ -61,10 +79,9 @@ public class SellerFormController implements Initializable {
 			service.saveOrUpdate(sell);
 			notifyDataChangeListeners();
 			Utils.currentStage(event).close();
-		}catch(ValidationException e) {
+		} catch (ValidationException e) {
 			setErrorMessages(e.getErrors());
-		}
-		catch (DbException e) {
+		} catch (DbException e) {
 			Alerts.showAlert("Error Saving Seller", "Database exception", e.getMessage(), AlertType.ERROR);
 		}
 	}
@@ -73,7 +90,7 @@ public class SellerFormController implements Initializable {
 		for (DataChangeListener dataChangeListener : listeners) {
 			dataChangeListener.onDataChanged();
 		}
-		
+
 	}
 
 	@FXML
@@ -90,7 +107,10 @@ public class SellerFormController implements Initializable {
 
 	private void initializeNodes() {
 		Constraints.setTextFieldInteger(txtId);
-		Constraints.setTextFieldMaxLength(txtName, 18);
+		Constraints.setTextFieldMaxLength(txtName, 50);
+		Constraints.setTextFieldMaxLength(txtEmail, 40);
+		Constraints.setTextFieldDouble(txtSalary);
+		Utils.formatDatePicker(dPBirthDate, "dd/MM/yyyy");
 	}
 
 	public void updateFormData() {
@@ -99,6 +119,12 @@ public class SellerFormController implements Initializable {
 		}
 		txtId.setText(String.valueOf(sell.getId()));
 		txtName.setText(sell.getName());
+		txtEmail.setText(sell.getEmail());
+		Locale.setDefault(Locale.US);
+		txtSalary.setText(String.format("%.2f", sell.getBaseSalary()));
+		if(sell.getBirthDate() != null) {
+			dPBirthDate.setValue(LocalDate.ofInstant(sell.getBirthDate().toInstant(), ZoneId.systemDefault()));
+		}
 	}
 
 	public void setSell(Seller sell) {
@@ -113,23 +139,24 @@ public class SellerFormController implements Initializable {
 		Seller obj = new Seller();
 		ValidationException error = new ValidationException("Error validating data");
 		obj.setId(Utils.tryParseToInt(txtId.getText()));
-		if(txtName.getText() == null|| txtName.getText().isBlank()) {
+		if (txtName.getText() == null || txtName.getText().isBlank()) {
 			error.addError("name", "Data must be informed");
 		}
 		obj.setName(txtName.getText());
-		if(error.getErrors().size()>0) {
+		if (error.getErrors().size() > 0) {
 			throw error;
 		}
 		return obj;
 	}
-	
+
 	public void subscribeDataChangeListener(DataChangeListener listener) {
 		listeners.add(listener);
 	}
-	private void setErrorMessages(Map<String,String> errors) {
-		Set <String> fields = errors.keySet();
-		if(fields.contains("name")) {
-			error.setText(errors.get("name"));
+
+	private void setErrorMessages(Map<String, String> errors) {
+		Set<String> fields = errors.keySet();
+		if (fields.contains("name")) {
+			errorName.setText(errors.get("name"));
 		}
 	}
 }
